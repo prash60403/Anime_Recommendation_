@@ -5,3 +5,18 @@ artifacts/model/
 artifacts/weights/
 artifacts/model_checkpoint/
 Anime_Recommendation.egg-info/
+
+# virtual environment
+anime/
+venv/
+env/
+*.env
+
+# logs
+logs/
+
+# model and datasets
+*.h5
+*.pt
+*.pkl
+*.csv
