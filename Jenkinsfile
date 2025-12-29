@@ -3,10 +3,15 @@ pipeline {
 
     environment {
         VENV_DIR = 'venv'
-        GCP_PROJECT= 'animerecommendation-482717'
-        GCLOUD_PATH= "/var/jenkins_home/google-cloud-sdk/bin"
-        KUBECTL_AUTH_PLUGIN=   "/user/lib/google-cloud-sdk/bin"
 
+        // ---- GCP CONFIG ----
+        GCP_PROJECT = 'animerecommendation-482717'
+        GCP_REGION  = 'us-central1'
+        CLUSTER_NAME = 'animecluster'
+
+        // Google Cloud SDK Path (already inside Jenkins container)
+        GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin"
+        KUBECTL_AUTH_PLUGIN = "/usr/lib/google-cloud-sdk/bin"
     }
 
     stages {
@@ -14,7 +19,13 @@ pipeline {
         stage("Clone Repo") {
             steps {
                 echo "Cloning from GitHub"
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'anime_github_token', url: 'https://github.com/prash60403/Anime_Recommendation_.git']])
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        credentialsId: 'anime_github_token',
+                        url: 'https://github.com/prash60403/Anime_Recommendation_.git'
+                    ]]
+                )
             }
         }
 
@@ -30,58 +41,54 @@ pipeline {
             }
         }
 
-        stage('DVC Pull'){
-            steps{
-                withCredentials([file(credentialsId:'gcp_key' , variable: 'GOOGLE_APPLICATION_CREDENTIALS' )]){
-                    script{
-                        echo 'DVC Pul....'
-                        sh '''
+        stage('DVC Pull') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp_key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh '''
                         . ${VENV_DIR}/bin/activate
+                        export PATH=$PATH:${GCLOUD_PATH}
                         dvc pull
-                        '''
-                    }
+                    '''
                 }
             }
         }
 
-
-        stage('Build and Push Image to GCR'){
-            steps{
-                withCredentials([file(credentialsId:'gcp_key' , variable: 'GOOGLE_APPLICATION_CREDENTIALS' )]){
-                    script{
-                        echo 'Build and Push Image to GCR'
-                        sh '''
+        stage('Build and Push Image to GCR') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp_key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh '''
                         export PATH=$PATH:${GCLOUD_PATH}
+
                         gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                         gcloud config set project ${GCP_PROJECT}
-                        gcloud auth configure-docker --quiet
+
+                        # Configure docker auth only for GCR
+                        gcloud auth configure-docker gcr.io --quiet
+
                         docker build -t gcr.io/${GCP_PROJECT}/ml-project:latest .
                         docker push gcr.io/${GCP_PROJECT}/ml-project:latest
-                        '''
-                    }
+                    '''
                 }
             }
         }
 
+        stage('Deploying to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp_key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    sh '''
+                        export PATH=$PATH:${KUBECTL_AUTH_PLUGIN}
 
-        stage('Deploying to Kubernetes'){
-            steps{
-                withCredentials([file(credentialsId:'gcp_key' , variable: 'GOOGLE_APPLICATION_CREDENTIALS' )]){
-                    script{
-                        echo 'Deploying to Kubernetes'
-                        sh '''
-                        export PATH=$PATH:${GCLOUD_PATH}:${KUBECTL_AUTH_PLUGIN}
                         gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
                         gcloud config set project ${GCP_PROJECT}
-                        gcloud container clusters get-credentials animecluster --region us-central1
+
+                        # Get kube credentials
+                        gcloud container clusters get-credentials ${CLUSTER_NAME} --region ${GCP_REGION}
+
                         kubectl apply -f deployment.yaml
-                        '''
-                    }
+                    '''
                 }
             }
         }
-        }
     }
-
-
+}
 
