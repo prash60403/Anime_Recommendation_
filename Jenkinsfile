@@ -1,45 +1,41 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-        VENV_DIR= 'venv'
-    }
-    stages{
-        stage("cloning from github..."){
 
-        steps{
-            script{
-                echo "Cloniing from github"
+    environment {
+        VENV_DIR = 'venv'
+    }
+
+    stages {
+
+        stage("Clone Repo") {
+            steps {
+                echo "Cloning from GitHub"
                 checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'anime_github_token', url: 'https://github.com/prash60403/Anime_Recommendation_.git']])
             }
         }
-    }
-    stage("Making  virtual environment ..........."){
 
-        steps{
-            script{
-                echo "Making  virtual environment ..........."
+        stage("Create Virtual Environment") {
+            steps {
                 sh '''
-                python -m venv ${VENV_DIR}
-                .${VENV_DIR}/bin/activate
-                pip install --upgrade pip
-                pip install -e
-                pip install dvc
+                    python3 -m venv ${VENV_DIR}
+                    . ${VENV_DIR}/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install dvc
                 '''
             }
         }
-    }
-    stage('DVC Pull'){
-        steps{
-            withCredentials([file(credentialsId: 'gcp_key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]){
-                script{
-                    echo "DVC Pull"
+
+        stage("DVC Pull") {
+            steps {
+                withCredentials([file(credentialsId: 'gcp_key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
-                    .${VENV_DIR}/bin/activate
-                    dvc pull
+                        . ${VENV_DIR}/bin/activate
+                        dvc pull
                     '''
                 }
             }
         }
+
     }
-}
 }
