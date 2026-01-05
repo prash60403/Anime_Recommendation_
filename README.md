@@ -36,13 +36,12 @@ It follows a complete **MLOps workflow** including data ingestion, preprocessing
 ├── utils/
 ├── requirements.txt
 
-##  data base setup using gcp buckets and iam user setup
-2.project setup - create folders for artifacts, config, notebook, pipeline, src, static, template, utils, 
+## 2.project setup - create folders for artifacts, config, notebook, pipeline, src, static, template, utils, 
 and files as requirement.txt
-3.Data ingestion 
+## 3.Data ingestion 
  - in data ingestion create data ingestion class and perform try and exception handling for uploading the csv file to csv
    if data is abov 5m download only 5m data else upload as it is.
-4. juipiter notebook analysis- 
+## 4. juipiter notebook analysis- 
   this is the main part of predicting the output 
   - import the libraries
   - now the problem is data might be inconsistent and not so accurate to recommend
@@ -72,7 +71,7 @@ and files as requirement.txt
   - This function (get_user_recommendations) recommends anime to a user by looking at what similar users like, removing anime the user already prefers, counting the most common remaining anime, and returning the top recommendations with genre and synopsis**.
   -This function hybrid_recommendation creates a hybrid anime recommendation by combining user-based recommendations (from similar users) and content-based recommendations (from similar anime), weighting both and returning the top suggested anime**.
 
-5. DataProcessor – Function-wise Explanation (Simple Points)
+## 5. DataProcessor – Function-wise Explanation (Simple Points)
 1. __init__()
 Initializes file paths, variables, and encoding dictionaries
 Creates output directory
@@ -114,7 +113,7 @@ Starts the complete preprocessing workflow
 ✅ In short:
 This class prepares clean, encoded, and well-structured data needed for training and running the anime recommendation system.
 
-6. ModelTraining – Function-wise Explanation (Point-wise, Simple)
+## 6. ModelTraining – Function-wise Explanation (Point-wise, Simple)
 1. __init__(self, data_path)
 Stores the processed data path
 Initializes Comet ML for experiment tracking
@@ -157,14 +156,14 @@ Confirms successful saving via logs
 Creates a ModelTraining object
 Starts the complete model training pipeline
 
-7 Experiment Tracking using Comet ML (Simple Explanation)
+## 7 Experiment Tracking using Comet ML (Simple Explanation)
 Comet ML is used to track and monitor machine learning experiments in real time.
 It automatically logs training loss, validation loss, metrics, models, and files during training.
 Helps compare different experiments (hyperparameters, models, epochs) easily from a web dashboard.
 Stores model weights, checkpoints, and artifacts safely for future use or rollback.
 Makes debugging and performance analysis easier by visualizing learning curves.
 
-8. Building an ML Pipeline (Simple Explanation)
+## 8. Building an ML Pipeline (Simple Explanation)
 An ML pipeline organizes the entire workflow from raw data to final predictions.
 It ensures each step runs in the correct order automatically.
 Makes the system reproducible, scalable, and easy to maintain.
@@ -177,8 +176,8 @@ Maintains a clear history of code updates.
 Helps revert bugs by going back to a stable commit.
 Integrates easily with CI/CD and MLOps tools.
 
-9. Prediction helper functions load the trained model and embeddings to generate accurate anime recommendations based on user and content similarity.
+## 9. Prediction helper functions load the trained model and embeddings to generate accurate anime recommendations based on user and content similarity.
 Flask serves these recommendations through a web app, while ChatGPT enhances the experience by explaining and interacting with users naturally.
 
-10. CI/CD deployment uses Jenkins to automatically build, test, and containerize the application whenever code changes are pushed.
+## 10. CI/CD deployment uses Jenkins to automatically build, test, and containerize the application whenever code changes are pushed.
 The Dockerized app is then deployed to Google Kubernetes Engine (GKE), ensuring scalable, reliable, and automated production releases.
